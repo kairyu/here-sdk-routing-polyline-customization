@@ -73,7 +73,7 @@ public class RoutingExample {
         MapCamera camera = mapView.getCamera();
         double distanceInMeters = 1000 * 10;
         MapMeasure mapMeasureZoom = new MapMeasure(MapMeasure.Kind.DISTANCE, distanceInMeters);
-        camera.lookAt(new GeoCoordinates(52.520798, 13.409408), mapMeasureZoom);
+        camera.lookAt(new GeoCoordinates(35.68, 139.76), mapMeasureZoom);
 
         try {
             routingEngine = new RoutingEngine();
@@ -83,8 +83,8 @@ public class RoutingExample {
     }
 
     public void addRoute() {
-        startGeoCoordinates = createRandomGeoCoordinatesAroundMapCenter();
-        destinationGeoCoordinates = createRandomGeoCoordinatesAroundMapCenter();
+        startGeoCoordinates = createRandomGeoCoordinatesAroundLatLon(35.68, 139.76);
+        destinationGeoCoordinates = createRandomGeoCoordinatesAroundLatLon(34.69, 135.53);
         Waypoint startWaypoint = new Waypoint(startGeoCoordinates);
         Waypoint destinationWaypoint = new Waypoint(destinationGeoCoordinates);
 
@@ -267,6 +267,10 @@ public class RoutingExample {
         }
         double lat = centerGeoCoordinates.latitude;
         double lon = centerGeoCoordinates.longitude;
+        return createRandomGeoCoordinatesAroundLatLon(lat, lon);
+    }
+
+    private GeoCoordinates createRandomGeoCoordinatesAroundLatLon(double lat, double lon) {
         return new GeoCoordinates(getRandom(lat - 0.02, lat + 0.02),
                 getRandom(lon - 0.02, lon + 0.02));
     }
