@@ -61,8 +61,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void initializeHERESDK() {
         // Set your credentials for the HERE SDK.
-        String accessKeyID = "YOUR_ACCESS_KEY_ID";
-        String accessKeySecret = "YOUR_ACCESS_KEY_SECRET";
+        String accessKeyID = BuildConfig.HERESDK_ACCESS_KEY_ID;
+        String accessKeySecret = BuildConfig.HERESDK_ACCESS_KEY_SECRET;
         SDKOptions options = new SDKOptions(accessKeyID, accessKeySecret);
         try {
             Context context = this;

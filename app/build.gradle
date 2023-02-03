@@ -8,6 +8,8 @@ android {
         targetSdkVersion 33
         versionCode 1
         versionName "1.0"
+        buildConfigField "String", "HERESDK_ACCESS_KEY_ID", "\"${System.env.HERESDK_ACCESS_KEY_ID}\""
+        buildConfigField "String", "HERESDK_ACCESS_KEY_SECRET", "\"${System.env.HERESDK_ACCESS_KEY_SECRET}\""
     }
     buildTypes {
         release {
