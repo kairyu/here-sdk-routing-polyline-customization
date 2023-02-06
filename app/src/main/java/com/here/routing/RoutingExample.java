@@ -21,6 +21,7 @@ package com.here.routing;
 
 import android.content.Context;
 import android.util.Log;
+import android.util.Pair;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -37,6 +38,7 @@ import com.here.sdk.mapview.MapMarker;
 import com.here.sdk.mapview.MapMeasure;
 import com.here.sdk.mapview.MapPolyline;
 import com.here.sdk.mapview.MapView;
+import com.here.sdk.routing.AccessAttributes;
 import com.here.sdk.routing.CalculateRouteCallback;
 import com.here.sdk.routing.CarOptions;
 import com.here.sdk.routing.Maneuver;
@@ -46,6 +48,7 @@ import com.here.sdk.routing.RoutingEngine;
 import com.here.sdk.routing.RoutingError;
 import com.here.sdk.routing.Section;
 import com.here.sdk.routing.SectionNotice;
+import com.here.sdk.routing.Span;
 import com.here.sdk.routing.Waypoint;
 
 import java.text.DateFormat;
@@ -167,14 +170,9 @@ public class RoutingExample {
         clearMap();
 
         // Show route as polyline.
-        GeoPolyline routeGeoPolyline = route.getGeometry();
-        float widthInPixels = 20;
-        MapPolyline routeMapPolyline = new MapPolyline(routeGeoPolyline,
-                widthInPixels,
-                Color.valueOf(0, 0.56f, 0.54f, 0.63f)); // RGBA
-
-        mapView.getMapScene().addMapPolyline(routeMapPolyline);
-        mapPolylines.add(routeMapPolyline);
+        List<MapPolyline> mapPolylineList = convertRouteToMapPolylineList(route);
+        mapView.getMapScene().addMapPolylines(mapPolylineList);
+        mapPolylines.addAll(mapPolylineList);
 
         GeoCoordinates startPoint =
                 route.getSections().get(0).getDeparturePlace().mapMatchedCoordinates;
@@ -190,6 +188,49 @@ public class RoutingExample {
         for (Section section : sections) {
             logManeuverInstructions(section);
         }
+    }
+
+    private List<MapPolyline> convertRouteToMapPolylineList(Route route) {
+        List<Pair<Boolean, List<GeoCoordinates>>> polylineList = new ArrayList<>();
+        for (Section section : route.getSections()) {
+            for (Span span : section.getSpans()) {
+                Boolean isTollRoad = span.getCarAttributes().contains(AccessAttributes.TOLL_ROAD);
+                polylineList.add(new Pair<>(isTollRoad, span.getPolyline()));
+            }
+        }
+
+        List<Pair<Boolean, List<GeoCoordinates>>> mergedPolylineList = new ArrayList<>();
+        for (Pair<Boolean, List<GeoCoordinates>> pair : polylineList) {
+            if (mergedPolylineList.isEmpty() || mergedPolylineList.get(mergedPolylineList.size() - 1).first != pair.first) {
+                mergedPolylineList.add(pair);
+            }
+            else {
+                mergedPolylineList.get(mergedPolylineList.size() - 1).second.addAll(pair.second);
+            }
+        }
+
+        float widthInPixels = 16;
+        float outlineWidthInPixels = 4;
+        List<MapPolyline> mapPolylineList = new ArrayList<>();
+        for (Pair<Boolean, List<GeoCoordinates>> pair : mergedPolylineList) {
+            Color color = pair.first
+                    ? Color.valueOf(0 / 255f, 176 / 255f, 107 / 255f, 0.75f) // Green
+                    : Color.valueOf(25 / 255f, 113 / 255f, 255 / 255f, 0.75f); // Blue
+            Color outlineColor = pair.first
+                    ? Color.valueOf(0 / 255f, 141 / 255f, 86 / 255f, 1.0f) // Dark Green
+                    : Color.valueOf(0 / 255f, 86 / 255f, 224 / 255f, 1.0f); // Dark Blue
+            try {
+                GeoPolyline geoPolyline = new GeoPolyline(pair.second);
+                MapPolyline mapPolyline = new MapPolyline(geoPolyline,
+                        widthInPixels, color,
+                        outlineWidthInPixels, outlineColor);
+                mapPolylineList.add(mapPolyline);
+            }
+            catch (InstantiationErrorException ignored) {
+            }
+        }
+
+        return mapPolylineList;
     }
 
     private void logManeuverInstructions(Section section) {
